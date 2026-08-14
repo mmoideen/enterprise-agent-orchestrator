@@ -1,0 +1,63 @@
+# Default governance policies
+# Loaded by policy engine on startup
+
+policies:
+  - name: "Global PII Protection"
+    description: "Require PII scanning for all agents accessing sensitive data"
+    scope: "global"
+    priority: 200
+    status: "active"
+    rules:
+      - rule_type: "pii_detection"
+        condition:
+          requires_scanning: true
+        action: "review"
+        severity: "high"
+
+  - name: "High Risk Block"
+    description: "Block deployment of agents with critical risk scores"
+    scope: "global"
+    priority: 300
+    status: "active"
+    rules:
+      - rule_type: "risk_threshold"
+        condition:
+          max_risk_score: 0.85
+        action: "deny"
+        severity: "critical"
+
+  - name: "Restricted Data Access"
+    description: "Require multi-level approval for restricted data access"
+    scope: "agent"
+    priority: 150
+    status: "active"
+    rules:
+      - rule_type: "data_access"
+        condition:
+          max_classification: "confidential"
+        action: "review"
+        severity: "high"
+
+  - name: "Production Deployment Control"
+    description: "Require approval for production deployments"
+    scope: "deployment"
+    priority: 100
+    status: "active"
+    rules:
+      - rule_type: "environment"
+        condition:
+          environments: ["production"]
+        action: "review"
+        severity: "medium"
+
+  - name: "External Integration Review"
+    description: "Review agents with external integrations"
+    scope: "agent"
+    priority: 120
+    status: "active"
+    rules:
+      - rule_type: "capabilities"
+        condition:
+          has_external_integrations: true
+        action: "review"
+        severity: "medium"

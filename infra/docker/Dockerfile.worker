@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml .
+COPY packages/ packages/
+COPY apps/worker/ apps/worker/
+COPY apps/orchestrator/config.py apps/orchestrator/config.py
+COPY apps/orchestrator/__init__.py apps/orchestrator/__init__.py
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -e .
+
+# Run worker
+CMD ["python", "-m", "apps.worker.main"]
