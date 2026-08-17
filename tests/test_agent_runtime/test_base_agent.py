@@ -1,14 +1,14 @@
 """Tests for BaseAgent class."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 
 from apps.agent_runtime.base_agent import BaseAgent
-from packages.governance_sdk.policy_engine import PolicyEngine, PolicyEvaluationResult
 from packages.governance_sdk.pii_detector import PIIDetector
+from packages.governance_sdk.policy_engine import PolicyEngine
 from packages.mcp_adapter.client import MCPClient
 
 
@@ -146,9 +146,7 @@ class TestGovernanceHooks:
         assert result["governance"]["policy_compliant"] is True
 
     @pytest.mark.asyncio
-    async def test_policy_violation_blocks_execution(
-        self, pii_detector: PIIDetector
-    ) -> None:
+    async def test_policy_violation_blocks_execution(self, pii_detector: PIIDetector) -> None:
         """Test that policy violations prevent execution."""
         from packages.domain_models.policy import Policy, PolicyRule, PolicyStatus
 
@@ -258,9 +256,7 @@ class TestGovernanceHooks:
         original_post_check = agent._post_execution_checks
         check_called = False
 
-        async def mock_post_check(
-            task: dict[str, Any], result: dict[str, Any]
-        ) -> None:
+        async def mock_post_check(task: dict[str, Any], result: dict[str, Any]) -> None:
             nonlocal check_called
             check_called = True
             await original_post_check(task, result)

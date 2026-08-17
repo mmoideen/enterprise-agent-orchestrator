@@ -3,9 +3,8 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from temporalio.client import Client as TemporalClient
 
 from apps.orchestrator.audit import create_audit_log
 from apps.orchestrator.config import settings
@@ -14,7 +13,6 @@ from apps.orchestrator.security import get_current_user
 from packages.domain_models.agent import Agent, AgentStatus
 from packages.domain_models.deployment import Deployment, DeploymentCreate, DeploymentStatus
 from packages.domain_models.user import User, UserRole
-
 
 router = APIRouter(prefix="/deployments", tags=["deployments"])
 
@@ -32,9 +30,7 @@ async def create_deployment(
     and triggers a Temporal workflow to handle the deployment lifecycle.
     """
     # Verify agent exists and is approved
-    result = await session.execute(
-        select(Agent).where(Agent.id == deployment_data.agent_id)
-    )
+    result = await session.execute(select(Agent).where(Agent.id == deployment_data.agent_id))
     agent = result.scalar_one_or_none()
 
     if not agent:
@@ -121,7 +117,7 @@ async def list_deployments(
     if current_user.role not in [UserRole.ADMIN, UserRole.APPROVER]:
         query = query.where(Deployment.triggered_by_id == current_user.id)
 
-    query = query.offset(skip).limit(limit).order_by(Deployment.started_at.desc())
+    query = query.offset(skip).limit(limit).order_by(col(Deployment.started_at).desc())
     result = await session.execute(query)
     deployments = result.scalars().all()
 
@@ -135,10 +131,8 @@ async def get_deployment(
     current_user: User = Depends(get_current_user),
 ) -> Deployment:
     """Get a specific deployment by ID."""
-    result = await session.execute(
-        select(Deployment).where(Deployment.id == deployment_id)
-    )
-    deployment = result.scalar_one_or_none()
+    result = await session.execute(select(Deployment).where(Deployment.id == deployment_id))
+    deployment: Deployment | None = result.scalar_one_or_none()
 
     if not deployment:
         raise HTTPException(status_code=404, detail="Deployment not found")
@@ -148,9 +142,7 @@ async def get_deployment(
         current_user.role not in [UserRole.ADMIN, UserRole.APPROVER]
         and deployment.triggered_by_id != current_user.id
     ):
-        raise HTTPException(
-            status_code=403, detail="Not authorized to view this deployment"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to view this deployment")
 
     return deployment
 
@@ -166,19 +158,15 @@ async def rollback_deployment(
 
     Triggers a compensating workflow to undo the deployment changes.
     """
-    result = await session.execute(
-        select(Deployment).where(Deployment.id == deployment_id)
-    )
-    deployment = result.scalar_one_or_none()
+    result = await session.execute(select(Deployment).where(Deployment.id == deployment_id))
+    deployment: Deployment | None = result.scalar_one_or_none()
 
     if not deployment:
         raise HTTPException(status_code=404, detail="Deployment not found")
 
     # Only admins and approvers can rollback
     if current_user.role not in [UserRole.ADMIN, UserRole.APPROVER]:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to rollback deployments"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to rollback deployments")
 
     if deployment.status not in [DeploymentStatus.RUNNING, DeploymentStatus.COMPLETED]:
         raise HTTPException(

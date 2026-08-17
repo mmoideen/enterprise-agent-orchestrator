@@ -2,11 +2,8 @@
 
 import pytest
 from httpx import AsyncClient
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-from packages.domain_models.agent import Agent, AgentStatus
-from packages.domain_models.deployment import DeploymentStatus
-from packages.domain_models.user import User
+from packages.domain_models.agent import Agent
 
 
 class TestDeploymentCreation:

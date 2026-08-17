@@ -1,15 +1,18 @@
 """Deployment domain models."""
 
 from datetime import datetime
-from enum import Enum
-from typing import Any
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from pydantic import Field
-from sqlmodel import JSON, Column, DateTime, Field as SQLField, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Relationship, SQLModel
+from sqlmodel import Field as SQLField
+
+if TYPE_CHECKING:
+    from packages.domain_models.agent import Agent
 
 
-class DeploymentStatus(str, Enum):
+class DeploymentStatus(StrEnum):
     """Deployment lifecycle status."""
 
     PENDING = "pending"
@@ -24,9 +27,7 @@ class DeploymentBase(SQLModel):
 
     agent_id: UUID = SQLField(foreign_key="agent.id", index=True)
     environment: str = SQLField(max_length=50, index=True)
-    configuration: dict[str, Any] = SQLField(
-        default_factory=dict, sa_column=Column(JSON)
-    )
+    configuration: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
 
 
 class Deployment(DeploymentBase, table=True):
@@ -47,7 +48,7 @@ class Deployment(DeploymentBase, table=True):
     run_id: str | None = SQLField(default=None, max_length=255)
 
     # Relationships
-    agent: "Agent" = Relationship(back_populates="deployments")  # type: ignore
+    agent: "Agent" = Relationship(back_populates="deployments")
 
 
 class DeploymentCreate(DeploymentBase):

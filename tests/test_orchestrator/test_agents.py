@@ -5,16 +5,13 @@ from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from packages.domain_models.agent import Agent, AgentStatus
-from packages.domain_models.user import User
 
 
 class TestAgentCreation:
     """Tests for creating agents."""
 
     @pytest.mark.asyncio
-    async def test_create_agent_success(
-        self, client: AsyncClient, developer_token: str
-    ) -> None:
+    async def test_create_agent_success(self, client: AsyncClient, developer_token: str) -> None:
         """Test successful agent creation."""
         response = await client.post(
             "/agents/",
@@ -66,9 +63,7 @@ class TestAgentListing:
         self, client: AsyncClient, admin_token: str, sample_agent: Agent
     ) -> None:
         """Test admin can list all agents."""
-        response = await client.get(
-            "/agents/", headers={"Authorization": f"Bearer {admin_token}"}
-        )
+        response = await client.get("/agents/", headers={"Authorization": f"Bearer {admin_token}"})
 
         assert response.status_code == 200
         data = response.json()

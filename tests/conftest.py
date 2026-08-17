@@ -11,16 +11,15 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from apps.orchestrator.main import app
 from apps.orchestrator.database import get_session
+from apps.orchestrator.main import app
 from apps.orchestrator.security import create_access_token, hash_password
 from packages.domain_models.agent import Agent, AgentStatus
-from packages.domain_models.user import User, UserRole
 from packages.domain_models.policy import Policy, PolicyRule, PolicyStatus
-from packages.governance_sdk.policy_engine import PolicyEngine
+from packages.domain_models.user import User, UserRole
 from packages.governance_sdk.pii_detector import PIIDetector
+from packages.governance_sdk.policy_engine import PolicyEngine
 from packages.governance_sdk.risk_scorer import RiskScorer
-
 
 # Use in-memory SQLite for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

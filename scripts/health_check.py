@@ -11,7 +11,6 @@ Checks connectivity and health of:
 
 import asyncio
 import sys
-from typing import Any
 
 import httpx
 import redis
@@ -51,14 +50,14 @@ async def check_temporal() -> tuple[bool, str]:
     try:
         # Temporal health check via HTTP
         async with httpx.AsyncClient() as client:
-            response = await client.get(
+            await client.get(
                 f"http://{settings.temporal_host.replace(':7233', ':7233')}",
                 timeout=5.0,
             )
             # Temporal doesn't have a standard health endpoint,
             # so we just check if the port is accessible
             return True, "Temporal server accessible"
-    except Exception as e:
+    except Exception:
         # Alternative: just check if port is open
         try:
             import socket

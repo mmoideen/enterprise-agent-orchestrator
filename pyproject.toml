@@ -83,6 +83,7 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "B008",  # function call in default argument (FastAPI's Depends idiom)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -92,6 +93,8 @@ ignore = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
+# Alembic revision scripts are generated; their `sa.sql` usage does not type-check.
+exclude = ["^alembic/versions/"]
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

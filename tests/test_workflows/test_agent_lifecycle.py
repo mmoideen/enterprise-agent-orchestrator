@@ -1,8 +1,6 @@
 """Tests for AgentLifecycleWorkflow."""
 
-from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -14,12 +12,6 @@ from apps.worker.workflows.agent_lifecycle import (
     AgentLifecycleInput,
     AgentLifecycleResult,
     AgentLifecycleWorkflow,
-)
-from apps.worker.activities.agent_activities import (
-    deploy_agent,
-    health_check_agent,
-    rollback_agent,
-    validate_agent,
 )
 
 

@@ -3,8 +3,8 @@
 from typing import Any
 from uuid import UUID
 
-from temporalio import activity
 import structlog
+from temporalio import activity
 
 logger = structlog.get_logger()
 
@@ -68,7 +68,7 @@ async def deploy_agent(
     deployment_id: UUID,
     agent_id: UUID,
     environment: str,
-    configuration: dict[str, Any],
+    configuration: dict[str, Any],  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Deploy agent to the target environment.
@@ -154,7 +154,7 @@ async def health_check_agent(deployment_id: UUID) -> dict[str, Any]:
 
     # Simulated health check
     is_healthy = True
-    issues = []
+    issues: list[str] = []
 
     logger.info(
         "health_check_complete",

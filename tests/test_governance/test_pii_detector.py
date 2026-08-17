@@ -1,7 +1,5 @@
 """Tests for PII detector."""
 
-import pytest
-
 from packages.governance_sdk.pii_detector import PIIDetector
 
 

@@ -23,14 +23,14 @@ class PydanticListJSON(TypeDecorator[list[Any]]):
         self.model = model
         super().__init__(*args, **kwargs)
 
-    def process_bind_param(self, value: Any, dialect: Dialect) -> Any:
+    def process_bind_param(self, value: Any, dialect: Dialect) -> Any:  # noqa: ARG002
         if value is None:
             return None
         return [
             item.model_dump(mode="json") if isinstance(item, BaseModel) else item for item in value
         ]
 
-    def process_result_value(self, value: Any, dialect: Dialect) -> Any:
+    def process_result_value(self, value: Any, dialect: Dialect) -> Any:  # noqa: ARG002
         if value is None:
             return None
         return [

@@ -6,11 +6,9 @@ from uuid import UUID
 
 import structlog
 
-from packages.domain_models.audit import DataLineage
-from packages.governance_sdk.policy_engine import PolicyEngine
 from packages.governance_sdk.pii_detector import PIIDetector
+from packages.governance_sdk.policy_engine import PolicyEngine
 from packages.mcp_adapter.client import MCPClient
-
 
 logger = structlog.get_logger()
 
@@ -84,9 +82,7 @@ class BaseAgent(ABC):
         """
         raise NotImplementedError("Subclasses must implement get_capabilities()")
 
-    async def execute_with_governance(
-        self, task: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def execute_with_governance(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute a task with full governance checks.
 
@@ -159,9 +155,7 @@ class BaseAgent(ABC):
 
         denials = [rule for rule in policy_result.matched_rules if rule.action == "deny"]
         if denials:
-            raise PermissionError(
-                f"Policy violation: {', '.join(policy_result.violations)}"
-            )
+            raise PermissionError(f"Policy violation: {', '.join(policy_result.violations)}")
 
         if "review" in policy_result.actions:
             self.logger.info("policy_review_required", violations=policy_result.violations)
@@ -171,9 +165,7 @@ class BaseAgent(ABC):
             matched_rules=len(policy_result.matched_rules),
         )
 
-    async def _post_execution_checks(
-        self, task: dict[str, Any], result: dict[str, Any]
-    ) -> None:
+    async def _post_execution_checks(self, task: dict[str, Any], result: dict[str, Any]) -> None:
         """
         Perform post-execution governance checks.
 
@@ -201,7 +193,9 @@ class BaseAgent(ABC):
         self.logger.info("post_execution_checks_passed")
 
     async def _track_data_lineage(
-        self, task: dict[str, Any], result: dict[str, Any]
+        self,
+        task: dict[str, Any],
+        result: dict[str, Any],  # noqa: ARG002
     ) -> None:
         """
         Track data lineage for this operation.

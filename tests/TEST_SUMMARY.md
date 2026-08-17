@@ -223,14 +223,9 @@ API tests use the HTTP client fixture:
 
 ```python
 @pytest.mark.asyncio
-async def test_api(
-    client: AsyncClient,
-    admin_token: str
-) -> None:
+async def test_api(client: AsyncClient, admin_token: str) -> None:
     response = await client.post(
-        "/endpoint",
-        json={"data": "value"},
-        headers={"Authorization": f"Bearer {admin_token}"}
+        "/endpoint", json={"data": "value"}, headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 201
 ```
@@ -240,10 +235,7 @@ Database tests use the session fixture:
 
 ```python
 @pytest.mark.asyncio
-async def test_database(
-    session: AsyncSession,
-    admin_user: User
-) -> None:
+async def test_database(session: AsyncSession, admin_user: User) -> None:
     result = await session.execute(select(User))
     users = result.scalars().all()
     assert len(users) > 0

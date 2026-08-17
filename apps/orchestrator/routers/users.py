@@ -19,7 +19,6 @@ from apps.orchestrator.security import (
 )
 from packages.domain_models.user import User, UserCreate, UserRead, UserRole
 
-
 router = APIRouter(prefix="/users", tags=["users"])
 
 
@@ -80,7 +79,7 @@ async def register_user(
 async def create_user(
     user_data: UserCreate,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    _current_user: User = Depends(require_role(UserRole.ADMIN)),
 ) -> User:
     """Create a user with an explicit role. Only accessible to administrators."""
     return await _create_user(session, user_data, user_data.role)
@@ -93,7 +92,7 @@ async def login(
 ) -> Token:
     """Authenticate a user and return an access token."""
     result = await session.execute(select(User).where(User.email == login_data.email))
-    user = result.scalar_one_or_none()
+    user: User | None = result.scalar_one_or_none()
 
     if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
@@ -129,7 +128,7 @@ async def list_users(
     skip: int = 0,
     limit: int = 100,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    _current_user: User = Depends(require_role(UserRole.ADMIN)),
 ) -> list[User]:
     """
     List all users.
@@ -147,7 +146,7 @@ async def list_users(
 async def get_user(
     user_id: UUID,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    _current_user: User = Depends(require_role(UserRole.ADMIN)),
 ) -> User:
     """
     Get a specific user by ID.
@@ -155,7 +154,7 @@ async def get_user(
     Only accessible to administrators.
     """
     result = await session.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user: User | None = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

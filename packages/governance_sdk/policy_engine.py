@@ -1,6 +1,5 @@
 """Policy engine for evaluating governance policies."""
 
-import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -40,9 +39,7 @@ class PolicyEngine:
             reverse=True,
         )
 
-    def evaluate(
-        self, context: dict[str, Any], scope: str = "global"
-    ) -> PolicyEvaluationResult:
+    def evaluate(self, context: dict[str, Any], scope: str = "global") -> PolicyEvaluationResult:
         """
         Evaluate policies against a given context.
 
@@ -68,9 +65,7 @@ class PolicyEngine:
 
                     if rule.action == "deny":
                         allowed = False
-                        violations.append(
-                            f"Policy '{policy.name}' denied: {rule.rule_type}"
-                        )
+                        violations.append(f"Policy '{policy.name}' denied: {rule.rule_type}")
                     elif rule.action == "review":
                         allowed = False
                         violations.append(
@@ -130,14 +125,14 @@ class PolicyEngine:
         requires_scanning = condition.get("requires_scanning", False)
         has_pii = context.get("contains_pii", False)
 
-        return requires_scanning and has_pii
+        return bool(requires_scanning and has_pii)
 
     def _check_risk_threshold(self, condition: dict[str, Any], context: dict[str, Any]) -> bool:
         """Check if risk score exceeds threshold."""
         threshold = condition.get("max_risk_score", 1.0)
         risk_score = context.get("risk_score", 0.0)
 
-        return risk_score > threshold
+        return bool(risk_score > threshold)
 
     def _check_agent_type(self, condition: dict[str, Any], context: dict[str, Any]) -> bool:
         """Check if agent type matches condition."""

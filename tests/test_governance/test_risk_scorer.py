@@ -2,8 +2,6 @@
 
 from typing import Any
 
-import pytest
-
 from packages.governance_sdk.risk_scorer import RiskScorer
 
 
@@ -171,7 +169,7 @@ class TestRiskLevels:
             (0.9, "critical"),
         ]
 
-        for score, expected_level in test_cases:
+        for score, _expected_level in test_cases:
             # Create metadata that produces approximately the target score
             metadata = {
                 "data_access": {"classification": "internal", "pii_access": False, "volume": "low"},

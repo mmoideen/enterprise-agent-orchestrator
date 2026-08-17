@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from temporalio import activity
 import structlog
+from temporalio import activity
 
 logger = structlog.get_logger()
 

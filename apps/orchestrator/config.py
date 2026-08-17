@@ -3,7 +3,6 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 DEFAULT_SECRET_KEY = "change-me-in-production"
 
 

@@ -7,7 +7,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from apps.orchestrator.config import settings
 
-
 async_engine = create_async_engine(
     settings.database_url,
     echo=False,

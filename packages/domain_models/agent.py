@@ -1,15 +1,18 @@
 """Agent domain models."""
 
 from datetime import datetime
-from enum import Enum
-from typing import Any
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from pydantic import Field
-from sqlmodel import JSON, Column, DateTime, Field as SQLField, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Relationship, SQLModel
+from sqlmodel import Field as SQLField
+
+if TYPE_CHECKING:
+    from packages.domain_models.deployment import Deployment
 
 
-class AgentStatus(str, Enum):
+class AgentStatus(StrEnum):
     """Agent lifecycle status."""
 
     DRAFT = "draft"
@@ -27,9 +30,7 @@ class AgentBase(SQLModel):
     description: str = SQLField(max_length=2000)
     agent_type: str = SQLField(index=True, max_length=100)
     capabilities: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
-    configuration: dict[str, Any] = SQLField(
-        default_factory=dict, sa_column=Column(JSON)
-    )
+    configuration: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
     version: str = SQLField(default="1.0.0", max_length=50)
     tags: list[str] = SQLField(default_factory=list, sa_column=Column(JSON))
 
@@ -49,13 +50,11 @@ class Agent(AgentBase, table=True):
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=datetime.utcnow),
     )
-    approved_at: datetime | None = SQLField(
-        default=None, sa_column=Column(DateTime(timezone=True))
-    )
+    approved_at: datetime | None = SQLField(default=None, sa_column=Column(DateTime(timezone=True)))
     approved_by_id: UUID | None = SQLField(default=None, foreign_key="user.id")
 
     # Relationships
-    deployments: list["Deployment"] = Relationship(back_populates="agent")  # type: ignore
+    deployments: list["Deployment"] = Relationship(back_populates="agent")
 
 
 class AgentCreate(AgentBase):

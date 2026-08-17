@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
 from uuid import UUID
 
 from temporalio import workflow
@@ -9,10 +10,10 @@ from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
     from apps.worker.activities.agent_activities import (
-        validate_agent,
         deploy_agent,
         health_check_agent,
         rollback_agent,
+        validate_agent,
     )
 
 
@@ -23,7 +24,7 @@ class AgentLifecycleInput:
     deployment_id: UUID
     agent_id: UUID
     environment: str
-    configuration: dict
+    configuration: dict[str, Any]
 
 
 @dataclass

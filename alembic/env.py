@@ -3,15 +3,14 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
-from alembic import context
-
-from apps.orchestrator.config import settings
-from packages.domain_models.agent import Agent
-from packages.domain_models.deployment import Deployment
-from packages.domain_models.user import User
-from packages.domain_models.policy import Policy
-from packages.domain_models.audit import AuditLog, DataLineage
 from sqlmodel import SQLModel
+
+from alembic import context
+from apps.orchestrator.config import settings
+
+# Imported for their side effect of registering tables on SQLModel.metadata,
+# which autogenerate compares against the live database.
+from packages import domain_models  # noqa: F401
 
 # Alembic Config object
 config = context.config

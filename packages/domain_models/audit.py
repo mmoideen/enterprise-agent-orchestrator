@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlmodel import JSON, Column, DateTime, Field as SQLField, SQLModel
+from sqlmodel import JSON, Column, DateTime, SQLModel
+from sqlmodel import Field as SQLField
 
 
 class AuditLogBase(SQLModel):
