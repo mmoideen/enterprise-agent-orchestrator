@@ -7,6 +7,7 @@ from packages.domain_models.agent import (
     AgentUpdate,
     AgentVersion,
 )
+from packages.domain_models.audit import AuditLog, DataLineage
 from packages.domain_models.deployment import (
     Deployment,
     DeploymentCreate,
@@ -21,6 +22,8 @@ __all__ = [
     "AgentStatus",
     "AgentUpdate",
     "AgentVersion",
+    "AuditLog",
+    "DataLineage",
     "Deployment",
     "DeploymentCreate",
     "DeploymentStatus",
