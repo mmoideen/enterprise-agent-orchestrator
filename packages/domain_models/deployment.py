@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import Field
-from sqlmodel import Column, DateTime, Field as SQLField, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Field as SQLField, Relationship, SQLModel
 
 
 class DeploymentStatus(str, Enum):
@@ -25,15 +25,15 @@ class DeploymentBase(SQLModel):
     agent_id: UUID = SQLField(foreign_key="agent.id", index=True)
     environment: str = SQLField(max_length=50, index=True)
     configuration: dict[str, Any] = SQLField(
-        default_factory=dict, sa_column=Column(type_=dict)
+        default_factory=dict, sa_column=Column(JSON)
     )
-    triggered_by_id: UUID = SQLField(foreign_key="user.id")
 
 
 class Deployment(DeploymentBase, table=True):
     """Deployment entity stored in database."""
 
     id: UUID = SQLField(default_factory=uuid4, primary_key=True)
+    triggered_by_id: UUID = SQLField(foreign_key="user.id")
     status: DeploymentStatus = SQLField(default=DeploymentStatus.PENDING, index=True)
     started_at: datetime = SQLField(
         default_factory=datetime.utcnow,
@@ -51,6 +51,10 @@ class Deployment(DeploymentBase, table=True):
 
 
 class DeploymentCreate(DeploymentBase):
-    """Model for creating a new deployment."""
+    """Model for creating a new deployment.
+
+    ``triggered_by_id`` is not accepted from clients; it is taken from the
+    authenticated caller.
+    """
 
     pass

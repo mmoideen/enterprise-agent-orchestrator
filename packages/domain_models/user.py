@@ -44,3 +44,11 @@ class UserCreate(UserBase):
     """Model for creating a new user."""
 
     password: str = SQLField(min_length=8)
+
+
+class UserRead(UserBase):
+    """Public user representation. Never exposes the password hash."""
+
+    id: UUID
+    created_at: datetime
+    updated_at: datetime

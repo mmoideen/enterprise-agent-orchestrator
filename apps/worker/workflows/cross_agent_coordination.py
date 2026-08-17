@@ -59,8 +59,10 @@ class CrossAgentCoordinationWorkflow:
         """
         workflow.logger.info(
             "Starting cross-agent coordination",
-            coordination_id=str(input.coordination_id),
-            task_count=len(input.agent_tasks),
+            extra={
+                "coordination_id": str(input.coordination_id),
+                "task_count": len(input.agent_tasks),
+            },
         )
 
         retry_policy = RetryPolicy(
@@ -132,10 +134,12 @@ class CrossAgentCoordinationWorkflow:
 
             workflow.logger.info(
                 "Cross-agent coordination completed",
-                coordination_id=str(input.coordination_id),
-                success=success,
-                result_count=len(results),
-                error_count=len(errors),
+                extra={
+                    "coordination_id": str(input.coordination_id),
+                    "success": success,
+                    "result_count": len(results),
+                    "error_count": len(errors),
+                },
             )
 
             return CoordinationResult(
@@ -157,6 +161,5 @@ class CrossAgentCoordinationWorkflow:
                 except Exception as e:
                     workflow.logger.error(
                         "Failed to release lock",
-                        resource_id=resource_id,
-                        error=str(e),
+                        extra={"resource_id": resource_id, "error": str(e)},
                     )

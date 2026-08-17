@@ -237,9 +237,7 @@ async def submit_for_approval(
 async def approve_agent(
     agent_id: UUID,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(
-        lambda: require_role([UserRole.ADMIN, UserRole.APPROVER], get_current_user)
-    ),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.APPROVER)),
 ) -> Agent:
     """
     Approve an agent for deployment.

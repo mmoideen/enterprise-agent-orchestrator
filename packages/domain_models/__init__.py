@@ -13,7 +13,7 @@ from packages.domain_models.deployment import (
     DeploymentStatus,
 )
 from packages.domain_models.policy import Policy, PolicyCreate, PolicyRule, PolicyStatus
-from packages.domain_models.user import User, UserCreate, UserRole
+from packages.domain_models.user import User, UserCreate, UserRead, UserRole
 
 __all__ = [
     "Agent",
@@ -30,5 +30,6 @@ __all__ = [
     "PolicyStatus",
     "User",
     "UserCreate",
+    "UserRead",
     "UserRole",
 ]

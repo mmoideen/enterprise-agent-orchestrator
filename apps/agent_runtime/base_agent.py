@@ -143,22 +143,28 @@ class BaseAgent(ABC):
             task: Task specification.
 
         Raises:
-            PermissionError: If policy evaluation denies the action.
+            PermissionError: If a matched policy rule denies the action. Rules that
+                only require review do not block execution; they are logged so the
+                approval workflow can pick them up.
         """
         # Evaluate policies
         context = {
             "agent_id": str(self.agent_id),
-            "agent_type": self.agent_name,
+            "agent_type": task.get("agent_type", self.agent_name),
             "action": task.get("action"),
             "data_classification": task.get("data_classification", "internal"),
         }
 
         policy_result = self.policy_engine.evaluate(context, scope="agent")
 
-        if not policy_result.allowed:
+        denials = [rule for rule in policy_result.matched_rules if rule.action == "deny"]
+        if denials:
             raise PermissionError(
                 f"Policy violation: {', '.join(policy_result.violations)}"
             )
+
+        if "review" in policy_result.actions:
+            self.logger.info("policy_review_required", violations=policy_result.violations)
 
         self.logger.info(
             "pre_execution_checks_passed",

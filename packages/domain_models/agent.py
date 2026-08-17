@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import Field
-from sqlmodel import Column, DateTime, Field as SQLField, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Field as SQLField, Relationship, SQLModel
 
 
 class AgentStatus(str, Enum):
@@ -26,19 +26,19 @@ class AgentBase(SQLModel):
     name: str = SQLField(index=True, min_length=1, max_length=255)
     description: str = SQLField(max_length=2000)
     agent_type: str = SQLField(index=True, max_length=100)
-    capabilities: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(type_=dict))
+    capabilities: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
     configuration: dict[str, Any] = SQLField(
-        default_factory=dict, sa_column=Column(type_=dict)
+        default_factory=dict, sa_column=Column(JSON)
     )
     version: str = SQLField(default="1.0.0", max_length=50)
-    owner_id: UUID = SQLField(foreign_key="user.id", index=True)
-    tags: list[str] = SQLField(default_factory=list, sa_column=Column(type_=list))
+    tags: list[str] = SQLField(default_factory=list, sa_column=Column(JSON))
 
 
 class Agent(AgentBase, table=True):
     """Agent entity stored in database."""
 
     id: UUID = SQLField(default_factory=uuid4, primary_key=True)
+    owner_id: UUID = SQLField(foreign_key="user.id", index=True)
     status: AgentStatus = SQLField(default=AgentStatus.DRAFT, index=True)
     risk_score: float = SQLField(default=0.0, ge=0.0, le=1.0)
     created_at: datetime = SQLField(
@@ -59,7 +59,11 @@ class Agent(AgentBase, table=True):
 
 
 class AgentCreate(AgentBase):
-    """Model for creating a new agent."""
+    """Model for creating a new agent.
+
+    ``owner_id`` is not accepted from clients; it is taken from the
+    authenticated caller.
+    """
 
     pass
 

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
+from temporalio import activity
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
@@ -30,14 +31,17 @@ class TestAgentLifecycleWorkflow:
         """Test complete successful agent lifecycle."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="validate_agent")
             async def mock_validate(agent_id: Any, config: Any) -> dict[str, Any]:
                 return {"valid": True, "errors": []}
 
+            @activity.defn(name="deploy_agent")
             async def mock_deploy(
                 deployment_id: Any, agent_id: Any, environment: str, config: Any
             ) -> dict[str, Any]:
                 return {"success": True}
 
+            @activity.defn(name="health_check_agent")
             async def mock_health_check(deployment_id: Any) -> dict[str, Any]:
                 return {"healthy": True, "issues": []}
 
@@ -69,9 +73,11 @@ class TestAgentLifecycleWorkflow:
         """Test workflow handles validation failure."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="validate_agent")
             async def mock_validate(agent_id: Any, config: Any) -> dict[str, Any]:
                 return {"valid": False, "errors": ["Invalid configuration"]}
 
+            @activity.defn(name="rollback_agent")
             async def mock_rollback(deployment_id: Any) -> dict[str, Any]:
                 return {"success": True, "rolled_back": True}
 
@@ -103,9 +109,11 @@ class TestAgentLifecycleWorkflow:
         """Test that deployment failure triggers rollback."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="validate_agent")
             async def mock_validate(agent_id: Any, config: Any) -> dict[str, Any]:
                 return {"valid": True, "errors": []}
 
+            @activity.defn(name="deploy_agent")
             async def mock_deploy(
                 deployment_id: Any, agent_id: Any, environment: str, config: Any
             ) -> dict[str, Any]:
@@ -113,6 +121,7 @@ class TestAgentLifecycleWorkflow:
 
             rollback_called = False
 
+            @activity.defn(name="rollback_agent")
             async def mock_rollback(deployment_id: Any) -> dict[str, Any]:
                 nonlocal rollback_called
                 rollback_called = True
@@ -146,19 +155,23 @@ class TestAgentLifecycleWorkflow:
         """Test that health check failure triggers rollback."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="validate_agent")
             async def mock_validate(agent_id: Any, config: Any) -> dict[str, Any]:
                 return {"valid": True, "errors": []}
 
+            @activity.defn(name="deploy_agent")
             async def mock_deploy(
                 deployment_id: Any, agent_id: Any, environment: str, config: Any
             ) -> dict[str, Any]:
                 return {"success": True}
 
+            @activity.defn(name="health_check_agent")
             async def mock_health_check(deployment_id: Any) -> dict[str, Any]:
                 return {"healthy": False, "issues": ["Service not responding"]}
 
             rollback_called = False
 
+            @activity.defn(name="rollback_agent")
             async def mock_rollback(deployment_id: Any) -> dict[str, Any]:
                 nonlocal rollback_called
                 rollback_called = True

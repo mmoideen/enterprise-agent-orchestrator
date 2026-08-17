@@ -64,8 +64,10 @@ class AgentLifecycleWorkflow:
         """
         workflow.logger.info(
             "Starting agent lifecycle workflow",
-            deployment_id=str(input.deployment_id),
-            agent_id=str(input.agent_id),
+            extra={
+                "deployment_id": str(input.deployment_id),
+                "agent_id": str(input.agent_id),
+            },
         )
 
         retry_policy = RetryPolicy(
@@ -114,7 +116,7 @@ class AgentLifecycleWorkflow:
 
             workflow.logger.info(
                 "Agent lifecycle completed successfully",
-                deployment_id=str(input.deployment_id),
+                extra={"deployment_id": str(input.deployment_id)},
             )
 
             return AgentLifecycleResult(
@@ -127,8 +129,7 @@ class AgentLifecycleWorkflow:
         except Exception as e:
             workflow.logger.error(
                 "Agent lifecycle failed, initiating rollback",
-                deployment_id=str(input.deployment_id),
-                error=str(e),
+                extra={"deployment_id": str(input.deployment_id), "error": str(e)},
             )
 
             # Compensating action: Rollback
@@ -142,8 +143,10 @@ class AgentLifecycleWorkflow:
             except Exception as rollback_error:
                 workflow.logger.error(
                     "Rollback failed",
-                    deployment_id=str(input.deployment_id),
-                    error=str(rollback_error),
+                    extra={
+                        "deployment_id": str(input.deployment_id),
+                        "error": str(rollback_error),
+                    },
                 )
 
             return AgentLifecycleResult(

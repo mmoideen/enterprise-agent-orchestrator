@@ -1,13 +1,16 @@
 """Security utilities for authentication and authorization."""
 
-from datetime import datetime, timedelta
+import base64
+import hashlib
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -16,8 +19,19 @@ from apps.orchestrator.database import get_session
 from packages.domain_models.user import User, UserRole
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
+
+# bcrypt only consumes the first 72 bytes of input; longer passwords are
+# pre-hashed so no entropy is silently discarded.
+BCRYPT_MAX_BYTES = 72
+
+
+def _password_bytes(password: str) -> bytes:
+    """Encode a password for bcrypt, pre-hashing anything over the 72-byte limit."""
+    encoded = password.encode()
+    if len(encoded) > BCRYPT_MAX_BYTES:
+        return base64.b64encode(hashlib.sha256(encoded).digest())
+    return encoded
 
 
 def hash_password(password: str) -> str:
@@ -30,7 +44,7 @@ def hash_password(password: str) -> str:
     Returns:
         Hashed password.
     """
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(_password_bytes(password), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -44,7 +58,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(_password_bytes(plain_password), hashed_password.encode())
 
 
 def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
@@ -60,9 +74,9 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
@@ -101,10 +115,11 @@ async def get_current_user(
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+        subject = UUID(user_id)
+    except (JWTError, ValueError):
+        raise credentials_exception from None
 
-    result = await session.execute(select(User).where(User.id == UUID(user_id)))
+    result = await session.execute(select(User).where(User.id == subject))
     user = result.scalar_one_or_none()
 
     if user is None:
@@ -119,26 +134,24 @@ async def get_current_user(
     return user
 
 
-async def require_role(
-    required_roles: list[UserRole],
-    current_user: User = Depends(get_current_user),
-) -> User:
+def require_role(*required_roles: UserRole) -> Callable[..., Awaitable[User]]:
     """
-    Dependency for requiring specific user roles.
+    Build a dependency that authenticates the caller and enforces its role.
 
     Args:
-        required_roles: List of roles that are allowed.
-        current_user: Current authenticated user.
+        required_roles: Roles that are allowed to call the endpoint.
 
     Returns:
-        Current user if authorized.
-
-    Raises:
-        HTTPException: If user doesn't have required role.
+        A FastAPI dependency resolving to the authorized user.
     """
-    if current_user.role not in required_roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Insufficient permissions. Required roles: {required_roles}",
-        )
-    return current_user
+
+    async def dependency(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in required_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions. Required roles: "
+                + ", ".join(role.value for role in required_roles),
+            )
+        return current_user
+
+    return dependency

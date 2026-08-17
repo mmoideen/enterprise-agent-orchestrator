@@ -1,16 +1,15 @@
 """Shared test fixtures and configuration."""
 
-import asyncio
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from typing import Any
-from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.ext.asyncio.session import AsyncEngine, AsyncSession
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import StaticPool
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from apps.orchestrator.main import app
 from apps.orchestrator.database import get_session
@@ -27,27 +26,13 @@ from packages.governance_sdk.risk_scorer import RiskScorer
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest_asyncio.fixture
 async def engine() -> AsyncGenerator[AsyncEngine, None]:
     """Create test database engine."""
-    from sqlmodel.ext.asyncio.session import AsyncEngine
-    from sqlmodel import create_engine as sync_create_engine
-
-    # Create async engine with in-memory SQLite
-    engine = AsyncEngine(
-        sync_create_engine(
-            "sqlite:///:memory:",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-        )
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
     # Create all tables
@@ -79,7 +64,7 @@ async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_session] = override_get_session
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
     app.dependency_overrides.clear()
