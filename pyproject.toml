@@ -109,6 +109,9 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["apps", "packages"]
+# SQLAlchemy's async layer runs ORM calls on greenlets; without this coverage
+# loses the frames after the first await inside async endpoints.
+concurrency = ["thread", "greenlet"]
 omit = [
     "*/tests/*",
     "*/__init__.py",
