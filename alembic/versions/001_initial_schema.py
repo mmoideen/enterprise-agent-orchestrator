@@ -51,7 +51,7 @@ def upgrade() -> None:
         sa.Column("configuration", postgresql.JSON(astext_type=sa.Text()), nullable=False),
         sa.Column("version", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
         sa.Column("owner_id", sa.UUID(), nullable=False),
-        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("tags", postgresql.JSON(astext_type=sa.Text()), nullable=False),
         sa.Column(
             "status",
             sa.Enum(

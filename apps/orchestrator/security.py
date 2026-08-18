@@ -55,9 +55,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         hashed_password: Hashed password.
 
     Returns:
-        True if password matches, False otherwise.
+        True if password matches, False otherwise. Malformed stored hashes
+        (legacy or imported values bcrypt cannot parse) verify as False.
     """
-    return bcrypt.checkpw(_password_bytes(plain_password), hashed_password.encode())
+    try:
+        return bcrypt.checkpw(_password_bytes(plain_password), hashed_password.encode())
+    except ValueError:
+        return False
 
 
 def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:

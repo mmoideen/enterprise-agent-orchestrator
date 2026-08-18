@@ -2,6 +2,7 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from packages.domain_models.user import User
 
@@ -264,3 +265,97 @@ class TestRBAC:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert agents_response.status_code == 201
+
+
+class TestPrivilegedUserCreation:
+    """Tests for role assignment on registration and admin user creation."""
+
+    @pytest.mark.asyncio
+    async def test_register_ignores_requested_role(self, client: AsyncClient) -> None:
+        """Test that self-registration cannot mint privileged accounts."""
+        response = await client.post(
+            "/users/register",
+            json={
+                "email": "escalate@test.com",
+                "full_name": "Escalation Attempt",
+                "password": "password123",
+                "role": "admin",
+                "is_active": True,
+            },
+        )
+
+        assert response.status_code == 201
+        assert response.json()["role"] == "viewer"
+
+    @pytest.mark.asyncio
+    async def test_admin_can_create_privileged_user(
+        self, client: AsyncClient, admin_token: str
+    ) -> None:
+        """Test that an admin can create a user with an explicit role."""
+        response = await client.post(
+            "/users/",
+            json={
+                "email": "newadmin@test.com",
+                "full_name": "New Admin",
+                "password": "password123",
+                "role": "admin",
+                "is_active": True,
+            },
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["role"] == "admin"
+        assert "hashed_password" not in data
+
+    @pytest.mark.asyncio
+    async def test_non_admin_cannot_create_user(
+        self, client: AsyncClient, developer_token: str
+    ) -> None:
+        """Test that non-admins are rejected by the privileged endpoint."""
+        response = await client.post(
+            "/users/",
+            json={
+                "email": "sneaky@test.com",
+                "full_name": "Sneaky User",
+                "password": "password123",
+                "role": "admin",
+                "is_active": True,
+            },
+            headers={"Authorization": f"Bearer {developer_token}"},
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_anonymous_cannot_create_user(self, client: AsyncClient) -> None:
+        """Test that unauthenticated callers are rejected by the privileged endpoint."""
+        response = await client.post(
+            "/users/",
+            json={
+                "email": "anon@test.com",
+                "full_name": "Anonymous",
+                "password": "password123",
+                "role": "admin",
+                "is_active": True,
+            },
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_login_with_malformed_stored_hash(
+        self, client: AsyncClient, session: AsyncSession, admin_user: User
+    ) -> None:
+        """Test that an unparseable stored hash is rejected instead of erroring."""
+        admin_user.hashed_password = "not-a-bcrypt-hash"
+        session.add(admin_user)
+        await session.commit()
+
+        response = await client.post(
+            "/users/login",
+            json={"email": admin_user.email, "password": "password123"},
+        )
+
+        assert response.status_code == 401
