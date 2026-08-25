@@ -7,13 +7,14 @@ from packages.domain_models.agent import (
     AgentUpdate,
     AgentVersion,
 )
+from packages.domain_models.audit import AuditLog, DataLineage
 from packages.domain_models.deployment import (
     Deployment,
     DeploymentCreate,
     DeploymentStatus,
 )
 from packages.domain_models.policy import Policy, PolicyCreate, PolicyRule, PolicyStatus
-from packages.domain_models.user import User, UserCreate, UserRole
+from packages.domain_models.user import User, UserCreate, UserRead, UserRole
 
 __all__ = [
     "Agent",
@@ -21,6 +22,8 @@ __all__ = [
     "AgentStatus",
     "AgentUpdate",
     "AgentVersion",
+    "AuditLog",
+    "DataLineage",
     "Deployment",
     "DeploymentCreate",
     "DeploymentStatus",
@@ -30,5 +33,6 @@ __all__ = [
     "PolicyStatus",
     "User",
     "UserCreate",
+    "UserRead",
     "UserRole",
 ]

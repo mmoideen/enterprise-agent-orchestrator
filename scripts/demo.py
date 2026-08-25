@@ -12,11 +12,8 @@ This script demonstrates:
 """
 
 import asyncio
-import time
-from typing import Any
 
 import httpx
-
 
 BASE_URL = "http://localhost:8000"
 
@@ -77,9 +74,7 @@ async def run_demo() -> None:
             "name": "Demo Customer Support Agent",
             "description": "AI agent for automated customer support ticket triage",
             "agent_type": "support",
-            "capabilities": {
-                "actions": ["classify_ticket", "suggest_response", "escalate"]
-            },
+            "capabilities": {"actions": ["classify_ticket", "suggest_response", "escalate"]},
             "configuration": {
                 "runtime": "python",
                 "resources": {"memory_mb": 512, "cpu_cores": 1},
@@ -104,7 +99,7 @@ async def run_demo() -> None:
         agent = create_response.json()
         agent_id = agent["id"]
 
-        print(f"\n✓ Agent created successfully")
+        print("\n✓ Agent created successfully")
         print(f"  Agent ID: {agent_id}")
         print(f"  Risk Score: {agent['risk_score']}")
         print(f"  Status: {agent['status']}")
@@ -112,9 +107,7 @@ async def run_demo() -> None:
         # Step 3: Submit for approval
         await print_step("3", "Submit Agent for Approval")
 
-        submit_response = await client.post(
-            f"/agents/{agent_id}/submit-approval", headers=headers
-        )
+        submit_response = await client.post(f"/agents/{agent_id}/submit-approval", headers=headers)
         await print_response(submit_response)
 
         print("\n✓ Agent submitted for approval")
@@ -133,9 +126,7 @@ async def run_demo() -> None:
         admin_token = admin_login_response.json()["access_token"]
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-        approve_response = await client.post(
-            f"/agents/{agent_id}/approve", headers=admin_headers
-        )
+        approve_response = await client.post(f"/agents/{agent_id}/approve", headers=admin_headers)
         await print_response(approve_response)
 
         print("\n✓ Agent approved by admin")
@@ -150,9 +141,7 @@ async def run_demo() -> None:
             "triggered_by_id": "placeholder",  # Will be overridden
         }
 
-        deploy_response = await client.post(
-            "/deployments/", json=deployment_data, headers=headers
-        )
+        deploy_response = await client.post("/deployments/", json=deployment_data, headers=headers)
         await print_response(deploy_response)
 
         if deploy_response.status_code != 201:
@@ -162,7 +151,7 @@ async def run_demo() -> None:
         deployment = deploy_response.json()
         deployment_id = deployment["id"]
 
-        print(f"\n✓ Deployment initiated")
+        print("\n✓ Deployment initiated")
         print(f"  Deployment ID: {deployment_id}")
         print(f"  Workflow ID: {deployment['workflow_id']}")
         print(f"  Status: {deployment['status']}")
@@ -173,18 +162,16 @@ async def run_demo() -> None:
         print("Checking deployment status...")
         for i in range(5):
             await asyncio.sleep(2)
-            status_response = await client.get(
-                f"/deployments/{deployment_id}", headers=headers
-            )
+            status_response = await client.get(f"/deployments/{deployment_id}", headers=headers)
 
             if status_response.status_code == 200:
                 status = status_response.json()
-                print(f"  [{i+1}/5] Status: {status['status']}")
+                print(f"  [{i + 1}/5] Status: {status['status']}")
 
                 if status["status"] in ["completed", "failed", "rolled_back"]:
                     break
             else:
-                print(f"  [{i+1}/5] Failed to fetch status")
+                print(f"  [{i + 1}/5] Failed to fetch status")
 
         await print_response(status_response)
 
@@ -211,9 +198,9 @@ async def run_demo() -> None:
         print()
         print("Summary:")
         print(f"  ✓ Agent created: {agent_id}")
-        print(f"  ✓ Agent approved by admin")
+        print("  ✓ Agent approved by admin")
         print(f"  ✓ Deployment initiated: {deployment_id}")
-        print(f"  ✓ Full audit trail captured")
+        print("  ✓ Full audit trail captured")
         print()
         print("Next steps:")
         print("  - View Temporal UI: http://localhost:8080")

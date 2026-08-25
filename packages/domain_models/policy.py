@@ -1,15 +1,18 @@
 """Policy domain models."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import Field
-from sqlmodel import Column, DateTime, Field as SQLField, SQLModel
+from sqlmodel import Column, DateTime, SQLModel
+from sqlmodel import Field as SQLField
+
+from packages.domain_models.types import PydanticListJSON
 
 
-class PolicyStatus(str, Enum):
+class PolicyStatus(StrEnum):
     """Policy lifecycle status."""
 
     ACTIVE = "active"
@@ -31,7 +34,9 @@ class PolicyBase(SQLModel):
 
     name: str = SQLField(index=True, max_length=255)
     description: str = SQLField(max_length=2000)
-    rules: list[PolicyRule] = SQLField(default_factory=list, sa_column=Column(type_=list))
+    rules: list[PolicyRule] = SQLField(
+        default_factory=list, sa_column=Column(PydanticListJSON(PolicyRule))
+    )
     scope: str = SQLField(max_length=100, index=True)
     priority: int = SQLField(default=0)
     created_by_id: UUID = SQLField(foreign_key="user.id")

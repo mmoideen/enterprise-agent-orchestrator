@@ -46,9 +46,7 @@ Be respectful, inclusive, and professional in all interactions.
 **Example:**
 
 ```python
-async def calculate_risk_score(
-    agent_metadata: dict[str, Any]
-) -> RiskScore:
+async def calculate_risk_score(agent_metadata: dict[str, Any]) -> RiskScore:
     """
     Calculate risk score for an agent.
 

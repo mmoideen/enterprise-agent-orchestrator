@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlmodel import Column, DateTime, Field as SQLField, SQLModel
+from sqlmodel import JSON, Column, DateTime, SQLModel
+from sqlmodel import Field as SQLField
 
 
 class AuditLogBase(SQLModel):
@@ -15,7 +16,7 @@ class AuditLogBase(SQLModel):
     resource_id: UUID = SQLField(index=True)
     user_id: UUID | None = SQLField(default=None, foreign_key="user.id", index=True)
     action: str = SQLField(max_length=100)
-    details: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(type_=dict))
+    details: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
     ip_address: str | None = SQLField(default=None, max_length=45)
     user_agent: str | None = SQLField(default=None, max_length=500)
 
@@ -26,8 +27,7 @@ class AuditLog(AuditLogBase, table=True):
     id: UUID = SQLField(default_factory=uuid4, primary_key=True)
     timestamp: datetime = SQLField(
         default_factory=datetime.utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-        index=True,
+        sa_column=Column(DateTime(timezone=True), nullable=False, index=True),
     )
 
 
@@ -45,6 +45,5 @@ class DataLineage(SQLModel, table=True):
     transformation: str | None = SQLField(default=None, max_length=2000)
     timestamp: datetime = SQLField(
         default_factory=datetime.utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-        index=True,
+        sa_column=Column(DateTime(timezone=True), nullable=False, index=True),
     )

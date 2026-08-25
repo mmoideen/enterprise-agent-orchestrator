@@ -1,6 +1,9 @@
 """Application configuration."""
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_SECRET_KEY = "change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -28,10 +31,14 @@ class Settings(BaseSettings):
     api_reload: bool = True
     api_workers: int = 1
 
+    # Environment
+    environment: str = "development"
+
     # Security
-    secret_key: str = "change-me-in-production"
+    secret_key: str = DEFAULT_SECRET_KEY
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     # Governance
     policy_config_path: str = "./config/policies.yaml"
@@ -49,6 +56,16 @@ class Settings(BaseSettings):
     # MCP
     mcp_server_enabled: bool = True
     mcp_server_port: int = 8001
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        """Reject the placeholder signing key outside development."""
+        if self.environment != "development" and self.secret_key == DEFAULT_SECRET_KEY:
+            raise ValueError(
+                "SECRET_KEY must be set to a cryptographically secure value "
+                f"when ENVIRONMENT={self.environment}"
+            )
+        return self
 
 
 settings = Settings()

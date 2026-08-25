@@ -5,16 +5,14 @@ from uuid import uuid4
 import pytest
 
 from apps.agent_runtime.agents.finance_agent import FinanceAgent
-from packages.governance_sdk.policy_engine import PolicyEngine
 from packages.governance_sdk.pii_detector import PIIDetector
+from packages.governance_sdk.policy_engine import PolicyEngine
 
 
 class TestFinanceAgentCapabilities:
     """Tests for Finance agent capabilities."""
 
-    def test_get_capabilities(
-        self, policy_engine: PolicyEngine, pii_detector: PIIDetector
-    ) -> None:
+    def test_get_capabilities(self, policy_engine: PolicyEngine, pii_detector: PIIDetector) -> None:
         """Test Finance agent capabilities structure."""
         agent = FinanceAgent(
             agent_id=uuid4(),

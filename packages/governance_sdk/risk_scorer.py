@@ -70,14 +70,10 @@ class RiskScorer:
         )
 
         # Deployment history score
-        components["deployment_history"] = self._score_history(
-            agent_metadata.get("history", {})
-        )
+        components["deployment_history"] = self._score_history(agent_metadata.get("history", {}))
 
         # Calculate weighted total
-        total_score = sum(
-            components[key] * self.WEIGHTS.get(key, 0.0) for key in components
-        )
+        total_score = sum(components[key] * self.WEIGHTS.get(key, 0.0) for key in components)
 
         # Determine risk level
         risk_level = self._determine_risk_level(total_score)
@@ -142,7 +138,6 @@ class RiskScorer:
         """Score based on compliance requirements."""
         frameworks = compliance.get("frameworks", [])
         audit_required = compliance.get("audit_required", False)
-        certifications = compliance.get("certifications", [])
 
         score = 0.0
 
@@ -164,7 +159,7 @@ class RiskScorer:
         """Score based on technical complexity."""
         dependencies = configuration.get("dependencies", [])
         custom_code = configuration.get("custom_code", False)
-        integration_points = configuration.get("integration_points", 0)
+        integration_points: int = configuration.get("integration_points", 0)
 
         score = 0.1  # Base complexity
 
@@ -179,7 +174,7 @@ class RiskScorer:
 
     def _score_history(self, history: dict[str, Any]) -> float:
         """Score based on deployment history."""
-        failure_rate = history.get("failure_rate", 0.0)
+        failure_rate: float = history.get("failure_rate", 0.0)
         rollback_count = history.get("rollback_count", 0)
         successful_deployments = history.get("successful_deployments", 0)
 
@@ -200,38 +195,24 @@ class RiskScorer:
                 return level
         return "unknown"
 
-    def _generate_recommendations(
-        self, components: dict[str, float], risk_level: str
-    ) -> list[str]:
+    def _generate_recommendations(self, components: dict[str, float], risk_level: str) -> list[str]:
         """Generate risk mitigation recommendations."""
         recommendations: list[str] = []
 
         if components.get("data_sensitivity", 0) > 0.6:
-            recommendations.append(
-                "Implement additional data access controls and audit logging"
-            )
+            recommendations.append("Implement additional data access controls and audit logging")
 
         if components.get("operational_impact", 0) > 0.7:
-            recommendations.append(
-                "Consider phased rollout with canary deployment strategy"
-            )
+            recommendations.append("Consider phased rollout with canary deployment strategy")
 
         if components.get("compliance_requirements", 0) > 0.5:
-            recommendations.append(
-                "Schedule compliance review before production deployment"
-            )
+            recommendations.append("Schedule compliance review before production deployment")
 
         if components.get("technical_complexity", 0) > 0.6:
-            recommendations.append(
-                "Conduct thorough integration testing and code review"
-            )
+            recommendations.append("Conduct thorough integration testing and code review")
 
         if risk_level in ["high", "critical"]:
-            recommendations.append(
-                "Require multi-level approval before deployment"
-            )
-            recommendations.append(
-                "Set up comprehensive monitoring and alerting"
-            )
+            recommendations.append("Require multi-level approval before deployment")
+            recommendations.append("Set up comprehensive monitoring and alerting")
 
         return recommendations

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
 from uuid import UUID
 
 from temporalio import workflow
@@ -10,9 +11,9 @@ from temporalio.common import RetryPolicy
 with workflow.unsafe.imports_passed_through():
     from apps.worker.activities.coordination_activities import (
         acquire_lock,
+        aggregate_results,
         execute_agent_task,
         release_lock,
-        aggregate_results,
     )
 
 
@@ -21,7 +22,7 @@ class CoordinationInput:
     """Input for cross-agent coordination workflow."""
 
     coordination_id: UUID
-    agent_tasks: list[dict]
+    agent_tasks: list[dict[str, Any]]
     require_sequential: bool = False
 
 
@@ -31,7 +32,7 @@ class CoordinationResult:
 
     success: bool
     coordination_id: UUID
-    results: list[dict]
+    results: list[dict[str, Any]]
     errors: list[str]
 
 
@@ -59,8 +60,10 @@ class CrossAgentCoordinationWorkflow:
         """
         workflow.logger.info(
             "Starting cross-agent coordination",
-            coordination_id=str(input.coordination_id),
-            task_count=len(input.agent_tasks),
+            extra={
+                "coordination_id": str(input.coordination_id),
+                "task_count": len(input.agent_tasks),
+            },
         )
 
         retry_policy = RetryPolicy(
@@ -132,10 +135,12 @@ class CrossAgentCoordinationWorkflow:
 
             workflow.logger.info(
                 "Cross-agent coordination completed",
-                coordination_id=str(input.coordination_id),
-                success=success,
-                result_count=len(results),
-                error_count=len(errors),
+                extra={
+                    "coordination_id": str(input.coordination_id),
+                    "success": success,
+                    "result_count": len(results),
+                    "error_count": len(errors),
+                },
             )
 
             return CoordinationResult(
@@ -157,6 +162,5 @@ class CrossAgentCoordinationWorkflow:
                 except Exception as e:
                     workflow.logger.error(
                         "Failed to release lock",
-                        resource_id=resource_id,
-                        error=str(e),
+                        extra={"resource_id": resource_id, "error": str(e)},
                     )

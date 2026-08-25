@@ -13,7 +13,6 @@ from packages.domain_models.agent import Agent, AgentCreate, AgentStatus, AgentU
 from packages.domain_models.user import User, UserRole
 from packages.governance_sdk.risk_scorer import RiskScorer
 
-
 router = APIRouter(prefix="/agents", tags=["agents"])
 
 
@@ -107,7 +106,7 @@ async def get_agent(
 ) -> Agent:
     """Get a specific agent by ID."""
     result = await session.execute(select(Agent).where(Agent.id == agent_id))
-    agent = result.scalar_one_or_none()
+    agent: Agent | None = result.scalar_one_or_none()
 
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -136,7 +135,7 @@ async def update_agent(
     versioning and redeployment.
     """
     result = await session.execute(select(Agent).where(Agent.id == agent_id))
-    agent = result.scalar_one_or_none()
+    agent: Agent | None = result.scalar_one_or_none()
 
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -201,7 +200,7 @@ async def submit_for_approval(
     Transitions the agent from DRAFT to PENDING_APPROVAL status.
     """
     result = await session.execute(select(Agent).where(Agent.id == agent_id))
-    agent = result.scalar_one_or_none()
+    agent: Agent | None = result.scalar_one_or_none()
 
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -237,9 +236,7 @@ async def submit_for_approval(
 async def approve_agent(
     agent_id: UUID,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(
-        lambda: require_role([UserRole.ADMIN, UserRole.APPROVER], get_current_user)
-    ),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.APPROVER)),
 ) -> Agent:
     """
     Approve an agent for deployment.
@@ -247,15 +244,13 @@ async def approve_agent(
     Only users with ADMIN or APPROVER role can approve agents.
     """
     result = await session.execute(select(Agent).where(Agent.id == agent_id))
-    agent = result.scalar_one_or_none()
+    agent: Agent | None = result.scalar_one_or_none()
 
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
 
     if agent.status != AgentStatus.PENDING_APPROVAL:
-        raise HTTPException(
-            status_code=400, detail="Only agents pending approval can be approved"
-        )
+        raise HTTPException(status_code=400, detail="Only agents pending approval can be approved")
 
     agent.status = AgentStatus.APPROVED
     agent.approved_by_id = current_user.id
@@ -287,7 +282,7 @@ async def delete_agent(
     Agents are never hard-deleted for audit purposes.
     """
     result = await session.execute(select(Agent).where(Agent.id == agent_id))
-    agent = result.scalar_one_or_none()
+    agent: Agent | None = result.scalar_one_or_none()
 
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")

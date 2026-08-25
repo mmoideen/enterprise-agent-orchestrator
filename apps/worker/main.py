@@ -1,25 +1,26 @@
 """Temporal worker main entry point."""
 
 import asyncio
+
 import structlog
 from temporalio.client import Client
 from temporalio.worker import Worker
 
 from apps.orchestrator.config import settings
-from apps.worker.workflows.agent_lifecycle import AgentLifecycleWorkflow
-from apps.worker.workflows.cross_agent_coordination import CrossAgentCoordinationWorkflow
 from apps.worker.activities.agent_activities import (
-    validate_agent,
     deploy_agent,
     health_check_agent,
     rollback_agent,
+    validate_agent,
 )
 from apps.worker.activities.coordination_activities import (
     acquire_lock,
-    release_lock,
-    execute_agent_task,
     aggregate_results,
+    execute_agent_task,
+    release_lock,
 )
+from apps.worker.workflows.agent_lifecycle import AgentLifecycleWorkflow
+from apps.worker.workflows.cross_agent_coordination import CrossAgentCoordinationWorkflow
 
 logger = structlog.get_logger()
 

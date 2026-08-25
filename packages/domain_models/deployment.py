@@ -1,15 +1,18 @@
 """Deployment domain models."""
 
 from datetime import datetime
-from enum import Enum
-from typing import Any
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from pydantic import Field
-from sqlmodel import Column, DateTime, Field as SQLField, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Relationship, SQLModel
+from sqlmodel import Field as SQLField
+
+if TYPE_CHECKING:
+    from packages.domain_models.agent import Agent
 
 
-class DeploymentStatus(str, Enum):
+class DeploymentStatus(StrEnum):
     """Deployment lifecycle status."""
 
     PENDING = "pending"
@@ -24,16 +27,14 @@ class DeploymentBase(SQLModel):
 
     agent_id: UUID = SQLField(foreign_key="agent.id", index=True)
     environment: str = SQLField(max_length=50, index=True)
-    configuration: dict[str, Any] = SQLField(
-        default_factory=dict, sa_column=Column(type_=dict)
-    )
-    triggered_by_id: UUID = SQLField(foreign_key="user.id")
+    configuration: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
 
 
 class Deployment(DeploymentBase, table=True):
     """Deployment entity stored in database."""
 
     id: UUID = SQLField(default_factory=uuid4, primary_key=True)
+    triggered_by_id: UUID = SQLField(foreign_key="user.id")
     status: DeploymentStatus = SQLField(default=DeploymentStatus.PENDING, index=True)
     started_at: datetime = SQLField(
         default_factory=datetime.utcnow,
@@ -47,10 +48,14 @@ class Deployment(DeploymentBase, table=True):
     run_id: str | None = SQLField(default=None, max_length=255)
 
     # Relationships
-    agent: "Agent" = Relationship(back_populates="deployments")  # type: ignore
+    agent: "Agent" = Relationship(back_populates="deployments")
 
 
 class DeploymentCreate(DeploymentBase):
-    """Model for creating a new deployment."""
+    """Model for creating a new deployment.
+
+    ``triggered_by_id`` is not accepted from clients; it is taken from the
+    authenticated caller.
+    """
 
     pass

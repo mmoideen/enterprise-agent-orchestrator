@@ -1,6 +1,5 @@
 """MCP client for agent tool access."""
 
-import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -88,9 +87,7 @@ class MCPClient:
             )
             raise
 
-    async def invoke_tool(
-        self, tool: MCPTool, arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def invoke_tool(self, tool: MCPTool, arguments: dict[str, Any]) -> dict[str, Any]:
         """
         Invoke an MCP tool with the given arguments.
 
@@ -111,9 +108,7 @@ class MCPClient:
         missing_params = set(required_params) - set(arguments.keys())
 
         if missing_params:
-            raise ValueError(
-                f"Missing required parameters: {missing_params}"
-            )
+            raise ValueError(f"Missing required parameters: {missing_params}")
 
         try:
             response = await self.http_client.post(
@@ -122,7 +117,7 @@ class MCPClient:
             )
             response.raise_for_status()
 
-            result = response.json()
+            result: dict[str, Any] = response.json()
             logger.info(
                 "mcp_tool_invoked",
                 tool_name=tool.name,

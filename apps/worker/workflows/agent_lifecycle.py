@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
 from uuid import UUID
 
 from temporalio import workflow
@@ -9,10 +10,10 @@ from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
     from apps.worker.activities.agent_activities import (
-        validate_agent,
         deploy_agent,
         health_check_agent,
         rollback_agent,
+        validate_agent,
     )
 
 
@@ -23,7 +24,7 @@ class AgentLifecycleInput:
     deployment_id: UUID
     agent_id: UUID
     environment: str
-    configuration: dict
+    configuration: dict[str, Any]
 
 
 @dataclass
@@ -64,8 +65,10 @@ class AgentLifecycleWorkflow:
         """
         workflow.logger.info(
             "Starting agent lifecycle workflow",
-            deployment_id=str(input.deployment_id),
-            agent_id=str(input.agent_id),
+            extra={
+                "deployment_id": str(input.deployment_id),
+                "agent_id": str(input.agent_id),
+            },
         )
 
         retry_policy = RetryPolicy(
@@ -114,7 +117,7 @@ class AgentLifecycleWorkflow:
 
             workflow.logger.info(
                 "Agent lifecycle completed successfully",
-                deployment_id=str(input.deployment_id),
+                extra={"deployment_id": str(input.deployment_id)},
             )
 
             return AgentLifecycleResult(
@@ -127,8 +130,7 @@ class AgentLifecycleWorkflow:
         except Exception as e:
             workflow.logger.error(
                 "Agent lifecycle failed, initiating rollback",
-                deployment_id=str(input.deployment_id),
-                error=str(e),
+                extra={"deployment_id": str(input.deployment_id), "error": str(e)},
             )
 
             # Compensating action: Rollback
@@ -142,8 +144,10 @@ class AgentLifecycleWorkflow:
             except Exception as rollback_error:
                 workflow.logger.error(
                     "Rollback failed",
-                    deployment_id=str(input.deployment_id),
-                    error=str(rollback_error),
+                    extra={
+                        "deployment_id": str(input.deployment_id),
+                        "error": str(rollback_error),
+                    },
                 )
 
             return AgentLifecycleResult(

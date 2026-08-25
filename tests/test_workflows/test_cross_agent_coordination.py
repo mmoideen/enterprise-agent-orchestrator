@@ -4,6 +4,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from temporalio import activity
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
@@ -22,12 +23,15 @@ class TestCrossAgentCoordinationWorkflow:
         """Test parallel execution of agent tasks."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="acquire_lock")
             async def mock_acquire_lock(resource_id: str) -> dict[str, Any]:
                 return {"acquired": True, "resource_id": resource_id}
 
+            @activity.defn(name="release_lock")
             async def mock_release_lock(resource_id: str) -> dict[str, Any]:
                 return {"released": True, "resource_id": resource_id}
 
+            @activity.defn(name="execute_agent_task")
             async def mock_execute_task(task: dict[str, Any]) -> dict[str, Any]:
                 return {
                     "task_id": task.get("id"),
@@ -36,6 +40,7 @@ class TestCrossAgentCoordinationWorkflow:
                     "result": {"success": True},
                 }
 
+            @activity.defn(name="aggregate_results")
             async def mock_aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
                 return {
                     "total_tasks": len(results),
@@ -85,12 +90,15 @@ class TestCrossAgentCoordinationWorkflow:
             execution_order = []
 
             # Mock activities
+            @activity.defn(name="acquire_lock")
             async def mock_acquire_lock(resource_id: str) -> dict[str, Any]:
                 return {"acquired": True, "resource_id": resource_id}
 
+            @activity.defn(name="release_lock")
             async def mock_release_lock(resource_id: str) -> dict[str, Any]:
                 return {"released": True, "resource_id": resource_id}
 
+            @activity.defn(name="execute_agent_task")
             async def mock_execute_task(task: dict[str, Any]) -> dict[str, Any]:
                 execution_order.append(task.get("id"))
                 return {
@@ -99,6 +107,7 @@ class TestCrossAgentCoordinationWorkflow:
                     "result": {"success": True},
                 }
 
+            @activity.defn(name="aggregate_results")
             async def mock_aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
                 return {
                     "total_tasks": len(results),
@@ -149,17 +158,21 @@ class TestCrossAgentCoordinationWorkflow:
             locks_released = []
 
             # Mock activities
+            @activity.defn(name="acquire_lock")
             async def mock_acquire_lock(resource_id: str) -> dict[str, Any]:
                 locks_acquired.append(resource_id)
                 return {"acquired": True, "resource_id": resource_id}
 
+            @activity.defn(name="release_lock")
             async def mock_release_lock(resource_id: str) -> dict[str, Any]:
                 locks_released.append(resource_id)
                 return {"released": True, "resource_id": resource_id}
 
+            @activity.defn(name="execute_agent_task")
             async def mock_execute_task(task: dict[str, Any]) -> dict[str, Any]:
                 return {"task_id": task.get("id"), "status": "completed"}
 
+            @activity.defn(name="aggregate_results")
             async def mock_aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
                 return {"total_tasks": len(results), "results": results}
 
@@ -203,17 +216,21 @@ class TestCrossAgentCoordinationWorkflow:
         """Test handling of partial task failures."""
         async with await WorkflowEnvironment.start_time_skipping() as env:
             # Mock activities
+            @activity.defn(name="acquire_lock")
             async def mock_acquire_lock(resource_id: str) -> dict[str, Any]:
                 return {"acquired": True, "resource_id": resource_id}
 
+            @activity.defn(name="release_lock")
             async def mock_release_lock(resource_id: str) -> dict[str, Any]:
                 return {"released": True, "resource_id": resource_id}
 
+            @activity.defn(name="execute_agent_task")
             async def mock_execute_task(task: dict[str, Any]) -> dict[str, Any]:
                 if task.get("id") == "task-2":
                     raise ValueError("Task 2 failed")
                 return {"task_id": task.get("id"), "status": "completed"}
 
+            @activity.defn(name="aggregate_results")
             async def mock_aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
                 return {"total_tasks": len(results), "results": results}
 

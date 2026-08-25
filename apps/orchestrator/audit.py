@@ -1,6 +1,7 @@
 """Audit logging middleware and utilities."""
 
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -10,14 +11,15 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from packages.domain_models.audit import AuditLog
 
-
 logger = structlog.get_logger()
 
 
 class AuditMiddleware(BaseHTTPMiddleware):
     """Middleware for auditing all API requests."""
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """
         Process request and log audit information.
 

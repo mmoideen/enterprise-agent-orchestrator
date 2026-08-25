@@ -1,6 +1,7 @@
 """MCP server implementation for exposing agent capabilities as tools."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import structlog
 from fastapi import FastAPI, HTTPException
@@ -60,9 +61,7 @@ class MCPServer:
             return {"tools": tools_list}
 
         @self.app.post("/tools/{tool_name}/invoke")
-        async def invoke_tool(
-            tool_name: str, request: ToolInvocationRequest
-        ) -> dict[str, Any]:
+        async def invoke_tool(tool_name: str, request: ToolInvocationRequest) -> dict[str, Any]:
             """Invoke a specific tool."""
             if tool_name not in self.tools:
                 raise HTTPException(status_code=404, detail=f"Tool '{tool_name}' not found")
@@ -88,7 +87,7 @@ class MCPServer:
                 raise HTTPException(
                     status_code=500,
                     detail=f"Tool invocation failed: {str(e)}",
-                )
+                ) from e
 
     def register_tool(
         self,

@@ -6,7 +6,6 @@ Creates sample users, agents, and policies for development and testing.
 """
 
 import asyncio
-from uuid import uuid4
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -68,20 +67,20 @@ async def seed_data() -> None:
             await session.refresh(admin)
             await session.refresh(developer)
 
-            print(f"✓ Created 4 demo users")
-            print(f"  - admin@demo.com / admin123 (ADMIN)")
-            print(f"  - developer@demo.com / dev123 (DEVELOPER)")
-            print(f"  - approver@demo.com / approver123 (APPROVER)")
-            print(f"  - viewer@demo.com / viewer123 (VIEWER)")
+            print("✓ Created 4 demo users")
+            print("  - admin@demo.com / admin123 (ADMIN)")
+            print("  - developer@demo.com / dev123 (DEVELOPER)")
+            print("  - approver@demo.com / approver123 (APPROVER)")
+            print("  - viewer@demo.com / viewer123 (VIEWER)")
 
         # Get existing users for agent/policy creation
         result = await session.execute(select(User).where(User.email == "developer@demo.com"))
-        developer = result.scalar_one_or_none()
+        developer_user: User | None = result.scalar_one_or_none()
 
         result = await session.execute(select(User).where(User.email == "admin@demo.com"))
-        admin = result.scalar_one_or_none()
+        admin_user: User | None = result.scalar_one_or_none()
 
-        if not developer or not admin:
+        if not developer_user or not admin_user:
             print("Error: Could not find demo users")
             return
 
@@ -118,10 +117,10 @@ async def seed_data() -> None:
                     },
                 },
                 version="1.0.0",
-                owner_id=developer.id,
+                owner_id=developer_user.id,
                 status=AgentStatus.APPROVED,
                 risk_score=0.45,
-                approved_by_id=admin.id,
+                approved_by_id=admin_user.id,
                 tags=["hr", "automation", "demo"],
             )
 
@@ -151,7 +150,7 @@ async def seed_data() -> None:
                     },
                 },
                 version="1.0.0",
-                owner_id=developer.id,
+                owner_id=developer_user.id,
                 status=AgentStatus.PENDING_APPROVAL,
                 risk_score=0.62,
                 tags=["finance", "automation", "demo"],
@@ -183,7 +182,7 @@ async def seed_data() -> None:
                     },
                 },
                 version="1.0.0",
-                owner_id=developer.id,
+                owner_id=developer_user.id,
                 status=AgentStatus.DRAFT,
                 risk_score=0.78,
                 tags=["compliance", "security", "demo"],
@@ -192,17 +191,15 @@ async def seed_data() -> None:
             session.add_all([hr_agent, finance_agent, compliance_agent])
             await session.commit()
 
-            print(f"✓ Created 3 demo agents")
-            print(f"  - HR Automation Agent (APPROVED, risk: 0.45)")
-            print(f"  - Finance Operations Agent (PENDING_APPROVAL, risk: 0.62)")
-            print(f"  - Compliance Monitoring Agent (DRAFT, risk: 0.78)")
+            print("✓ Created 3 demo agents")
+            print("  - HR Automation Agent (APPROVED, risk: 0.45)")
+            print("  - Finance Operations Agent (PENDING_APPROVAL, risk: 0.62)")
+            print("  - Compliance Monitoring Agent (DRAFT, risk: 0.78)")
 
         # Create demo policies
         print("\nCreating demo policies...")
 
-        result = await session.execute(
-            select(Policy).where(Policy.name == "PII Access Control")
-        )
+        result = await session.execute(select(Policy).where(Policy.name == "PII Access Control"))
         if result.scalar_one_or_none():
             print("Demo policies already exist, skipping policy creation")
         else:
@@ -219,7 +216,7 @@ async def seed_data() -> None:
                 ],
                 scope="agent",
                 priority=100,
-                created_by_id=admin.id,
+                created_by_id=admin_user.id,
                 status=PolicyStatus.ACTIVE,
             )
 
@@ -236,7 +233,7 @@ async def seed_data() -> None:
                 ],
                 scope="global",
                 priority=200,
-                created_by_id=admin.id,
+                created_by_id=admin_user.id,
                 status=PolicyStatus.ACTIVE,
             )
 
@@ -253,17 +250,17 @@ async def seed_data() -> None:
                 ],
                 scope="agent",
                 priority=150,
-                created_by_id=admin.id,
+                created_by_id=admin_user.id,
                 status=PolicyStatus.ACTIVE,
             )
 
             session.add_all([pii_policy, high_risk_policy, restricted_data_policy])
             await session.commit()
 
-            print(f"✓ Created 3 demo policies")
-            print(f"  - PII Access Control (priority: 100)")
-            print(f"  - High Risk Deployment Block (priority: 200)")
-            print(f"  - Restricted Data Access Control (priority: 150)")
+            print("✓ Created 3 demo policies")
+            print("  - PII Access Control (priority: 100)")
+            print("  - High Risk Deployment Block (priority: 200)")
+            print("  - Restricted Data Access Control (priority: 150)")
 
         print("\n========================================")
         print("✓ Demo data seeding complete!")

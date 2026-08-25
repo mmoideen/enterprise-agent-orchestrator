@@ -21,9 +21,7 @@ class TestAuditMiddleware:
     ) -> None:
         """Test that audit middleware logs API requests."""
         # Make an API request
-        response = await client.get(
-            "/agents/", headers={"Authorization": f"Bearer {admin_token}"}
-        )
+        response = await client.get("/agents/", headers={"Authorization": f"Bearer {admin_token}"})
 
         assert response.status_code == 200
         # Note: In a real test, you would check the logs were created
@@ -34,9 +32,7 @@ class TestCreateAuditLog:
     """Tests for create_audit_log function."""
 
     @pytest.mark.asyncio
-    async def test_create_audit_log_basic(
-        self, session: AsyncSession, admin_user: User
-    ) -> None:
+    async def test_create_audit_log_basic(self, session: AsyncSession, admin_user: User) -> None:
         """Test creating a basic audit log entry."""
         resource_id = uuid4()
 
@@ -98,9 +94,7 @@ class TestCreateAuditLog:
         assert audit_log.user_agent == "Mozilla/5.0"
 
     @pytest.mark.asyncio
-    async def test_create_audit_log_without_user(
-        self, session: AsyncSession
-    ) -> None:
+    async def test_create_audit_log_without_user(self, session: AsyncSession) -> None:
         """Test creating audit log without user (system action)."""
         resource_id = uuid4()
 
@@ -126,7 +120,7 @@ class TestAuditLogQuery:
     ) -> None:
         """Test querying audit logs by event type."""
         # Create multiple audit logs
-        for i in range(3):
+        for _ in range(3):
             await create_audit_log(
                 session=session,
                 event_type="agent.created",
@@ -172,9 +166,7 @@ class TestAuditLogQuery:
         )
 
         # Query by user
-        result = await session.execute(
-            select(AuditLog).where(AuditLog.user_id == admin_user.id)
-        )
+        result = await session.execute(select(AuditLog).where(AuditLog.user_id == admin_user.id))
         admin_logs = result.scalars().all()
 
         result = await session.execute(
@@ -212,9 +204,7 @@ class TestAuditLogQuery:
         )
 
         # Query by resource
-        result = await session.execute(
-            select(AuditLog).where(AuditLog.resource_id == resource_id)
-        )
+        result = await session.execute(select(AuditLog).where(AuditLog.resource_id == resource_id))
         logs = result.scalars().all()
 
         assert len(logs) == 2
@@ -224,9 +214,7 @@ class TestAuditLogRetention:
     """Tests for audit log retention and compliance."""
 
     @pytest.mark.asyncio
-    async def test_audit_log_has_timestamp(
-        self, session: AsyncSession, admin_user: User
-    ) -> None:
+    async def test_audit_log_has_timestamp(self, session: AsyncSession, admin_user: User) -> None:
         """Test that audit logs have timestamps."""
         audit_log = await create_audit_log(
             session=session,
@@ -240,9 +228,7 @@ class TestAuditLogRetention:
         assert audit_log.timestamp is not None
 
     @pytest.mark.asyncio
-    async def test_audit_log_immutability(
-        self, session: AsyncSession, admin_user: User
-    ) -> None:
+    async def test_audit_log_immutability(self, session: AsyncSession, admin_user: User) -> None:
         """Test that audit logs should be immutable."""
         audit_log = await create_audit_log(
             session=session,

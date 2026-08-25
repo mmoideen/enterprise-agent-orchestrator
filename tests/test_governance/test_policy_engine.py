@@ -1,7 +1,5 @@
 """Tests for policy engine."""
 
-import pytest
-
 from packages.domain_models.policy import Policy, PolicyRule, PolicyStatus
 from packages.governance_sdk.policy_engine import PolicyEngine
 
@@ -85,9 +83,7 @@ class TestPolicyEvaluation:
         ]
 
         engine = PolicyEngine(policies)
-        result = engine.evaluate(
-            {"data_classification": "confidential"}, scope="agent"
-        )
+        result = engine.evaluate({"data_classification": "confidential"}, scope="agent")
 
         assert result.allowed is False
 
